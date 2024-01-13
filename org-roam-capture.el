@@ -389,8 +389,8 @@ during the Org-roam capture process.")
 This variable is populated dynamically, and is only non-nil
 during the Org-roam capture process.")
 
-(defconst org-roam-capture--template-keywords (list :target :id :link-description :call-location
-                                                    :region)
+(defconst org-roam-capture--template-keywords
+  (list :target :id :link-description :call-location :region :disable-auto-id)
   "Keywords used in `org-roam-capture-templates' specific to Org-roam.")
 
 ;;; Main entry point
@@ -570,16 +570,22 @@ Return the ID of the location."
          (set-buffer (org-capture-target-buffer (org-roam-node-file node)))
          (goto-char (org-roam-node-point node))
          (setq p (org-roam-node-point node)))))
-    ;; Setup `org-id' for the current capture target and return it back to the
-    ;; caller.
     (save-excursion
       (goto-char p)
-      (if-let ((id (org-entry-get p "ID")))
-          (setf (org-roam-node-id org-roam-capture--node) id)
-        (org-entry-put p "ID" (org-roam-node-id org-roam-capture--node)))
       (prog1
-          (org-id-get)
+          (org-roam-capture--set-id p)
         (run-hooks 'org-roam-capture-new-node-hook)))))
+
+(defun org-roam-capture-suppress-set-id? ()
+  (org-roam-capture--get :disable-auto-id))
+
+(defun org-roam-capture--set-id (point)
+  "Setup `org-id' for the current capture target and return it back to the caller."
+  (unless (org-roam-capture-suppress-set-id?)
+    (if-let ((id (org-entry-get point "ID")))
+        (setf (org-roam-node-id org-roam-capture--node) id)
+      (org-entry-put point "ID" (org-roam-node-id org-roam-capture--node)))
+    (org-id-get)))
 
 (defun org-roam-capture--get-target ()
   "Get the current capture :target for the capture template in use."
