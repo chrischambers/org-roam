@@ -576,12 +576,12 @@ Return the ID of the location."
           (org-roam-capture--set-id p)
         (run-hooks 'org-roam-capture-new-node-hook)))))
 
-(defun org-roam-capture-suppress-set-id? ()
+(defun org-roam-capture--disable-auto-id? ()
   (org-roam-capture--get :disable-auto-id))
 
 (defun org-roam-capture--set-id (point)
   "Setup `org-id' for the current capture target and return it back to the caller."
-  (unless (org-roam-capture-suppress-set-id?)
+  (unless (org-roam-capture--disable-auto-id?)
     (if-let ((id (org-entry-get point "ID")))
         (setf (org-roam-node-id org-roam-capture--node) id)
       (org-entry-put point "ID" (org-roam-node-id org-roam-capture--node)))
