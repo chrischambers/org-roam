@@ -214,7 +214,8 @@ The query is expected to be able to fail, in this situation, run HANDLER."
        (source :not-null)
        (dest :not-null)
        (type :not-null)
-       (properties :not-null)]
+       (properties :not-null)
+       heading-pos]
       (:foreign-key [source] :references nodes [id] :on-delete :cascade)))))
 
 (defconst org-roam-db--table-indices
@@ -525,7 +526,12 @@ INFO is the org-element parsed buffer."
           (org-roam-db-query
            [:insert :into links
             :values $v1]
-           (vector (point) source path type properties)))))))
+           (vector (point)
+                   source
+                   path
+                   type
+                   properties
+                   (and (org-back-to-heading-or-point-min t) (point)))))))))
 
 (defun org-roam-db-insert-citation (citation)
   "Insert data for CITATION at current point into the Org-roam cache."
