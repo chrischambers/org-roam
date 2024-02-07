@@ -31,6 +31,7 @@
 ;;
 ;;; Code:
 (require 'org-roam)
+(require 'org-roam-utils)
 (require 'url-parse)
 (require 'ol)
 (defvar org-outline-path-cache)
@@ -108,7 +109,7 @@ ROAM_REFS."
   :type '(alist))
 
 ;;; Variables
-(defconst org-roam-db-version 20)
+(defconst org-roam-db-version 21)
 
 (defvar org-roam-db--connection (make-hash-table :test #'equal)
   "Database connection to Org-roam database.")
@@ -216,7 +217,8 @@ The query is expected to be able to fail, in this situation, run HANDLER."
        (type :not-null)
        (properties :not-null)
        heading-pos
-       heading-title]
+       heading-title
+       link-description]
       (:foreign-key [source] :references nodes [id] :on-delete :cascade)))))
 
 (defconst org-roam-db--table-indices
@@ -509,6 +511,7 @@ INFO is the org-element parsed buffer."
            (path (if (not option) path
                    (substring path 0 (match-beginning 0))))
            (source (org-roam-id-at-point))
+           (link-description (org-roam-get-link-description link))
            (properties (list :outline (ignore-errors
                                         ;; This can error if link is not under any headline
                                         (org-get-outline-path 'with-self 'use-cache))))
@@ -527,14 +530,15 @@ INFO is the org-element parsed buffer."
           (org-roam-db-query
            [:insert :into links
             :values $v1]
-           (vector (point)
-                   source
-                   path
-                   type
-                   properties
-                   (and (org-back-to-heading-or-point-min t) (point))
-                   (when (> (point) 1)
-                      (org-element-property :title (org-element-context))))))))))
+             (vector (point)
+                     source
+                     path
+                     type
+                     properties
+                     (and (org-back-to-heading-or-point-min t) (point))
+                     (when (> (point) 1)
+                       (org-element-property :title (org-element-context)))
+                     link-description)))))))
 
 (defun org-roam-db-insert-citation (citation)
   "Insert data for CITATION at current point into the Org-roam cache."
