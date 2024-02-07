@@ -415,6 +415,15 @@ Accounts for both v2 and v3."
   (when org-roam-verbose
     (apply #'message `(,(concat "(org-roam) " format-string) ,@args))))
 
+;;;; Links
+(defun org-roam-get-link-description (element)
+  "Return the description for a link if it has one; otherwise `nil'."
+  (when-let
+      ((start (org-element-property :contents-begin element))
+       (end (org-element-property :contents-end element)))
+    (buffer-substring-no-properties start end)))
+
+
 ;;; Diagnostics
 ;; TODO Update this to also get commit hash
 ;;;###autoload
